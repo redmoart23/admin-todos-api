@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import prisma from "@/lib/prisma";
-import { console } from "inspector";
 import { NextResponse, NextRequest } from "next/server";
+import * as yup from "yup";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -30,14 +30,26 @@ export async function GET(request: Request) {
   return NextResponse.json(todos);
 }
 
+const postSchema = yup.object().shape({
+  description: yup.string().required(),
+  completed: yup.boolean().optional().default(false),
+});
+
 export async function POST(request: Request) {
-  const { description } = await request.json();
+  try {
+    const { completed, description } = await postSchema.validate(
+      await request.json()
+    );
 
-  const todo = await prisma.todo.create({
-    data: {
-      description,
-    },
-  });
+    const todo = await prisma.todo.create({
+      data: {
+        description,
+        completed,
+      },
+    });
 
-  return NextResponse.json(todo);
+    return NextResponse.json(todo);
+  } catch (error) {
+    return NextResponse.json(error, { status: 400 });
+  }
 }
