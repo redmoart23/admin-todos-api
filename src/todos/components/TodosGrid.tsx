@@ -14,10 +14,8 @@ export const TodosGrid = ({ todos = [] }: Props) => {
   const router = useRouter();
 
   const toggleTodo = async (id: string, completed: boolean) => {
-    const updatedTodo = await todosApi.updateTodo(id, completed);
-    console.log({updatedTodo});
+    await todosApi.updateTodo(id, completed);
     router.refresh();
-
   };
 
   return (
