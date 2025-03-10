@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { Todo } from "@prisma/client";
 import { NextResponse } from "next/server";
 import * as yup from "yup";
 
@@ -8,62 +9,49 @@ interface Segments {
   };
 }
 
-export async function GET(request: Request, { params }: Segments) {
-  const { id } = params;
+const getTodo = async (id: string): Promise<Todo | null> => {
+  const todo = await prisma.todo.findFirst({ where: { id } });
 
-  const todo = await prisma.todo.findUnique({
-    where: {
-      id,
-    },
-  });
+  return todo;
+};
+
+export async function GET(request: Request, { params }: Segments) {
+  const todo = await getTodo(params.id);
 
   if (!todo) {
-    return NextResponse.json({ message: "Todo not found" }, { status: 404 });
+    return NextResponse.json(
+      { message: `Todo con id ${params.id} no exite` },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json(todo);
 }
 
-const putSchema = yup.object().shape({
-  description: yup.string().required(),
-  completed: yup.boolean().optional().default(false),
+const putSchema = yup.object({
+  completed: yup.boolean().optional(),
+  description: yup.string().optional(),
 });
 
 export async function PUT(request: Request, { params }: Segments) {
-  const { id } = params;
-
-  const todo = await prisma.todo.findUnique({
-    where: {
-      id,
-    },
-  });
+  const todo = await getTodo(params.id);
 
   if (!todo) {
-    return NextResponse.json({ message: "Todo not found" }, { status: 404 });
+    return NextResponse.json(
+      { message: `Todo con id ${params.id} no exite` },
+      { status: 404 }
+    );
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { completed, description, ...rest } = await putSchema.validate(
+    const { completed, description } = await putSchema.validate(
       await request.json()
     );
 
     const updatedTodo = await prisma.todo.update({
-      where: {
-        id,
-      },
-      data: {
-        completed,
-        description,
-      },
+      where: { id: params.id },
+      data: { completed, description },
     });
-
-    if (!updatedTodo) {
-      return NextResponse.json(
-        { message: "Todo not updated" },
-        { status: 404 }
-      );
-    }
 
     return NextResponse.json(updatedTodo);
   } catch (error) {
