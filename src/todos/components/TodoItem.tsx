@@ -1,5 +1,7 @@
 "use client";
 import { Todo } from "@prisma/client";
+//import { useOptimistic } from "react";
+
 import { IoCheckboxOutline, IoSquareOutline } from "react-icons/io5";
 
 interface Props {
@@ -8,6 +10,10 @@ interface Props {
 }
 
 export const TodoItem = ({ todo, toggleTodo }: Props) => {
+
+  //const [optimisticTodo, addOptimisticTodo] = useOptimistic<Todo>(todo, {});
+
+
   return (
     <div className={todo.completed ? "todoDone" : "todoPending"}>
       <div className="flex flex-col sm:flex-row justify-start items-center gap-4">
